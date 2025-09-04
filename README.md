@@ -288,24 +288,3 @@ const COMPONENT_REGISTRY: Record<string, React.ComponentType<any>> = {
 ### Styling
 
 All components use Tailwind CSS classes and PrimeReact components for consistent styling. You can customize the appearance by modifying the component files or updating the Tailwind configuration.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/new-component`
-3. Make your changes
-4. Add tests if applicable
-5. Commit your changes: `git commit -am 'Add new component'`
-6. Push to the branch: `git push origin feature/new-component`
-7. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- **PrimeReact** for the excellent UI component library
-- **OpenAI** for the AI capabilities
-- **Tailwind CSS** for the utility-first styling approach
-- **Next.js** for the powerful React framework
