@@ -8,7 +8,6 @@ import { ProgressSpinner } from "primereact/progressspinner";
 import { Message } from "primereact/message";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { getAssetPath, getApiPath } from "@/lib/pathUtils";
 
 export default function Home() {
   const [markdownContent, setMarkdownContent] = useState("");
@@ -28,7 +27,7 @@ export default function Home() {
     setError(null);
 
     try {
-      const response = await fetch(getApiPath("/api/parse-markdown"), {
+      const response = await fetch("/api/parse-markdown", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -82,7 +81,7 @@ export default function Home() {
 
   const loadSampleData = async () => {
     try {
-      const response = await fetch(getAssetPath("/hcd.md"));
+      const response = await fetch("/hcd.md");
       const content = await response.text();
       setMarkdownContent(content);
     } catch (err) {
