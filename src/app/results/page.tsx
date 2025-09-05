@@ -12,6 +12,12 @@ import {
   StructuredApiResponse,
 } from "@/lib/componentSchema";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import {
+  useComponentsStore,
+  useParsedData,
+  useGenerationOptions,
+  useHasHydrated,
+} from "@/store/componentsStore";
 
 interface ParsedMetadata {
   title: string;
@@ -24,25 +30,29 @@ export default function ResultsPage() {
     ComponentData[] | FlexibleComponentData[]
   >([]);
   const [metadata, setMetadata] = useState<ParsedMetadata | null>(null);
-  const [originalMarkdown, setOriginalMarkdown] = useState("");
-  const [useIntelligentSelection, setUseIntelligentSelection] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [processingInfo, setProcessingInfo] = useState<any>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    // Load data from sessionStorage
-    try {
-      const storedComponents = sessionStorage.getItem("parsedComponents");
-      const storedMetadata = sessionStorage.getItem("parsedMetadata");
-      const storedMarkdown = sessionStorage.getItem("originalMarkdown");
-      const storedIntelligentSelection = sessionStorage.getItem(
-        "useIntelligentSelection"
-      );
+  // Use Zustand store for data management
+  const { parsedComponents, originalMarkdown, getMetadata } = useParsedData();
+  const { generationOptions } = useGenerationOptions();
+  const { clearAll } = useComponentsStore();
+  const hasHydrated = useHasHydrated();
 
-      if (!storedComponents || !storedMetadata) {
+  const { useIntelligentSelection } = generationOptions;
+
+  useEffect(() => {
+    // Wait for hydration before accessing store data
+    if (!hasHydrated) {
+      return;
+    }
+
+    // Load data from Zustand store
+    try {
+      if (!parsedComponents) {
         setError(
           "No parsed data found. Please go back and generate a page first."
         );
@@ -51,7 +61,7 @@ export default function ResultsPage() {
       }
 
       // Handle both old and new response formats
-      const parsedData = JSON.parse(storedComponents);
+      const parsedData = parsedComponents;
 
       // Check if it's the new structured response format
       if (parsedData.success !== undefined) {
@@ -77,25 +87,23 @@ export default function ResultsPage() {
           : [];
 
         setComponents(transformedComponents);
-        setMetadata(JSON.parse(storedMetadata));
+        const storeMetadata = getMetadata();
+        if (storeMetadata) {
+          setMetadata(storeMetadata as ParsedMetadata);
+        }
       }
 
-      setOriginalMarkdown(storedMarkdown || "");
-      setUseIntelligentSelection(storedIntelligentSelection === "true");
       setIsLoading(false);
     } catch (err) {
       setError("Failed to load parsed data");
       setIsLoading(false);
       console.error("Error loading parsed data:", err);
     }
-  }, []);
+  }, [hasHydrated, parsedComponents, getMetadata]);
 
   const handleGoBack = () => {
-    // Clear sessionStorage and go back to home
-    sessionStorage.removeItem("parsedComponents");
-    sessionStorage.removeItem("parsedMetadata");
-    sessionStorage.removeItem("originalMarkdown");
-    sessionStorage.removeItem("useIntelligentSelection");
+    // Clear Zustand store and go back to home
+    clearAll();
     router.push("/");
   };
 

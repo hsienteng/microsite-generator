@@ -8,14 +8,21 @@ import { ProgressSpinner } from "primereact/progressspinner";
 import { Message } from "primereact/message";
 import { useRouter } from "next/navigation";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import {
+  useComponentsStore,
+  useGenerationOptions,
+} from "@/store/componentsStore";
 
 export default function Home() {
   const [markdownContent, setMarkdownContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [useIntelligentSelection, setUseIntelligentSelection] = useState(true);
-  const [filteringStrictness, setFilteringStrictness] = useState("moderate");
   const router = useRouter();
+
+  const { generationOptions, setGenerationOptions } = useGenerationOptions();
+  const { setParsedComponents, setOriginalMarkdown } = useComponentsStore();
+
+  const { useIntelligentSelection, filteringStrictness } = generationOptions;
 
   const handleParse = async () => {
     if (!markdownContent.trim()) {
@@ -45,30 +52,8 @@ export default function Home() {
 
       const data = await response.json();
 
-      // Store the entire response for the results page
-      // This supports both old and new response formats
-      sessionStorage.setItem("parsedComponents", JSON.stringify(data));
-
-      // Also store individual pieces for backward compatibility
-      if (data.data) {
-        // New structured format
-        sessionStorage.setItem(
-          "parsedMetadata",
-          JSON.stringify(data.data.metadata)
-        );
-      } else {
-        // Legacy format
-        sessionStorage.setItem(
-          "parsedMetadata",
-          JSON.stringify(data.metadata || {})
-        );
-      }
-
-      sessionStorage.setItem("originalMarkdown", markdownContent);
-      sessionStorage.setItem(
-        "useIntelligentSelection",
-        useIntelligentSelection.toString()
-      );
+      setParsedComponents(data);
+      setOriginalMarkdown(markdownContent);
 
       // Navigate to the results page
       router.push("/results");
@@ -257,7 +242,9 @@ export default function Home() {
                             id="intelligent"
                             checked={useIntelligentSelection}
                             onChange={(e) =>
-                              setUseIntelligentSelection(e.target.checked)
+                              setGenerationOptions({
+                                useIntelligentSelection: e.target.checked,
+                              })
                             }
                             className="mr-3 w-5 h-5"
                           />
@@ -281,7 +268,12 @@ export default function Home() {
                           <select
                             value={filteringStrictness}
                             onChange={(e) =>
-                              setFilteringStrictness(e.target.value)
+                              setGenerationOptions({
+                                filteringStrictness: e.target.value as
+                                  | "strict"
+                                  | "moderate"
+                                  | "lenient",
+                              })
                             }
                             className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-900 dark:text-white bg-white dark:bg-gray-700"
                           >
